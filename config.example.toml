@@ -1,0 +1,22 @@
+# EXAMPLE CONFIGURATION - DO NOT USE IN PRODUCTION
+# Copy to config.toml and replace with your real values
+
+listen_addr = "0.0.0.0:8080"
+rpc_addr = "0.0.0.0:3000"
+
+# Add your bootstrap node addresses here
+bootstrap_nodes = []
+
+# Set to 0 for automatic genesis timestamp
+genesis_timestamp = 0
+
+# Example genesis accounts - Replace with real addresses
+[genesis]
+"EXAMPLE_ADDRESS_1_REPLACE_ME" = 100000000000000000
+"EXAMPLE_ADDRESS_2_REPLACE_ME" = 50000000000000000
+
+# Example validators - Replace with real validator addresses
+[validators]
+"VALIDATOR_1_ADDRESS_REPLACE_ME" = 1000000000000000
+"VALIDATOR_2_ADDRESS_REPLACE_ME" = 1000000000000000
+"VALIDATOR_3_ADDRESS_REPLACE_ME" = 1000000000000000

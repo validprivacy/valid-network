@@ -1,0 +1,816 @@
+# Changelog
+
+All notable changes to Valid Blockchain will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Changed
+- Valid Network moved to github.com/validprivacy/valid-network and is licensed under the Functional Source License, Version 1.1, with Apache 2.0 as the future license (FSL-1.1-ALv2). Each version becomes available under Apache 2.0 two years after it is released. See LICENSE.md.
+- The Rust package and node binary are now named valid-network, and library imports use valid_network. Archive segments published to Arweave carry the App-Name tag valid-network.
+- The whitepaper and litepaper are published at validprivacy.github.io, and the private network product is described as private deployments.
+- Cargo.lock matches the 0.8.0 package version.
+
+## [0.8.0] - 2026-08-24
+
+### Added
+- correlation.rs — scaffold for broadcast anchor collection, peer response sampling, passive RTT fingerprinting, cluster detection, and correlation window analysis
+- behavioral_merit.rs — scaffold for operational identity, wallet continuity, signing cadence, and behavioral merit scoring
+- integrity.rs — scaffold for NodeIntegrityScore, FlagRecord, FlagPattern, promotion decisioning, group penalty logic, and historical flag lifecycle
+- docs/v0.8-correlation-spec.md — full v0.8.x design specification covering the 90-day observer period, correlation detection architecture, passive RTT/location confidence, behavioral merit pipeline, and promotion gating
+- lib.rs — registered correlation, behavioral_merit, and integrity modules
+
+### Architecture
+- Two-tier network model defined: observer pool and validator pool
+- 90-day observer period established as the promotion gate
+- Merit decay model defined: continuous erosion without active participation
+- Heartbeat correlation detection designed across three vectors: broadcast arrival correlation, heartbeat synchronization, and reaction correlation
+- Passive RTT fingerprinting defined for geographic confidence and infrastructure similarity detection
+- FlagPattern cross-node matching for attacker behavior profiling across identity rotations
+- NodeIntegrityScore separates current confidence (recoverable) from historical flag record (permanent)
+- BroadcastAnchor bounded ring buffer model defined to satisfy Zero Footprint retention constraints
+- All three new modules scoped exclusively to valid-blockchain branch
+
+### Security
+- reqwest bumped 0.11 to 0.12 resolving h2 CVE RUSTSEC-2026-0258
+
+## [0.7.6] - 2026-07-21
+
+### Fixed
+- arweave.rs — signing field order corrected to Arweave format 2 spec
+  - Previous order: format, owner, target, data_root, data_size, quantity, reward, anchor, tags
+  - Correct order: format, owner, target, quantity, reward, anchor, tags, data_size, data_root
+- arweave.rs — data_root leaf hash corrected — chunk bytes are now pre-hashed before leaf_hash()
+  - leaf_hash now receives SHA256(chunk) not raw chunk bytes
+  - matches arweave-js merkle.ts reference implementation
+- arweave.rs — wallet loading now supports ARWEAVE_WALLET_PATH (file path) in addition to ARWEAVE_JWK_JSON
+- arweave.rs — wallet address added to ArweaveWallet struct and logged at startup
+- arweave.rs — full POST /tx response body logged for observability
+
+### Added
+- src/bin/arweave_test.rs — standalone test binary for live Arweave mainnet validation
+- arweave.rs — data_root and tx_id logged before submission
+- arweave.rs — segment size and wallet address logged before submission
+- App-Version tag bumped to v0.7.5
+
+### Validated
+- Real archive segment submitted to Arweave mainnet
+- Transaction accepted: tx_id 71o-aNdFvGGPEcIvK6b4MCFKQjS-FJD_-KAIKDeiKCA
+- data_root correctness confirmed against live network
+- RSA-PSS signing path confirmed correct
+- Inline upload confirmed sufficient for current segment sizes — chunked upload not required
+- All 119 tests pass
+
+## [0.7.5] - 2026-07-11
+
+### Added
+- src/config.rs — tls_trust_mode and trusted_peer_fingerprints fields
+  - tls_trust_mode defaults to pinned_fingerprints — unsupported modes fail startup
+  - trusted_peer_fingerprints — optional allowlist of SHA-256 fingerprints
+  - Empty list means trust all — backward compatible with existing deployments
+- tls.rs — is_trusted_fingerprint() — case-insensitive, whitespace-tolerant fingerprint matching
+- tls.rs — validate_peer_certificate() — shared cert extraction and trust check helper
+- tls.rs — LoggingOnlyVerifier replaces FingerprintVerifier — naming reflects actual behavior
+- 12 TLS trust tests (tests/tls_trust_tests.rs)
+
+### Changed
+- network.rs — connect_and_handle_peer() accepts trusted_fingerprints parameter
+- network.rs — outbound connections rejected if peer cert fingerprint not in allowlist
+- network.rs — broadcast_message() accepts trusted_fingerprints parameter — broadcast path no longer bypasses trust policy
+- main.rs — trusted_peer_fingerprints loaded from config and threaded through all outbound connection paths
+- main.rs — tls_trust_mode validated at startup — unsupported values exit immediately
+- main.rs — trust mode and fingerprint count logged at startup
+
+### Notes
+- This is trust scaffolding, not full mTLS
+- LoggingOnlyVerifier passes all certs at the rustls layer — application-level trust check runs after handshake via validate_peer_certificate()
+- Empty trusted_peer_fingerprints list allows all connections — existing configs require no changes
+- Fingerprint pinning is ephemeral-cert compatible — fingerprints must be exchanged out-of-band before each session since certs regenerate at startup
+- Persistent validator identity key and session-stable cert pinning deferred to future hardening
+- All 119 tests pass (107 existing + 12 TLS trust)
+
+## [0.7.4] - 2026-07-010
+
+### Added
+- Per-IP inbound connection rate limiting — 5 attempts per 60 seconds, keyed by source IP only
+- Per-peer inbound message rate limiting — 100 messages per 10 seconds per connected peer
+- allow_inbound_connection() — rolling window connection limiter in network.rs
+- record_inbound_message() — rolling window message limiter in peer_manager.rs
+- message_timestamps field on PeerManager — per-peer inbound message history
+- PeerManager::apply_handshake_metadata() — extracted handshake policy from main.rs into testable helper
+- is_valid_peer_addr() — canonical address validator exported from address.rs
+- 7 rate limiting tests (tests/rate_limit_tests.rs)
+- 23 handshake validation and address parser tests (tests/handshake_validation_tests.rs)
+
+### Changed
+- Inbound connection attempts beyond threshold dropped before TLS handshake
+- Handshake message counts against peer message budget — rate-limited peers disconnected immediately
+- Message rate check runs before update_seen() — rate-limited messages do not mutate peer liveness
+- message_timestamps migrated during normalize_peer_address() with stale entry pruning
+- cleanup_stale_peers() removes message_timestamps alongside peer and dial entries
+- Gossiped peer addresses validated via is_valid_peer_addr() before entering PeerManager
+- RPC addresses validated after canonicalization — invalid normalized RPC not bound
+- Invalid their_addr in handshake rejects all handshake data including gossip and RPC
+- split_host_port() rejects empty bracketed hosts — []:8000 now correctly rejected
+- apply_handshake_metadata() replaces inline handshake block in main.rs
+
+### Notes
+- Connection limiter keyed by source IP only — ephemeral port rotation does not bypass limit
+- Message limiter uses same rolling window pattern as connection limiter
+- Handshake counts as first message toward peer budget
+- Rate limiting is first-pass minimal — no persistent banlists, no subnet heuristics, no type-specific quotas
+- All 107 tests pass (51 existing + 18 address + 8 peer manager + 23 handshake validation + 7 rate limiting)
+
+## [0.7.3] - 2026-07-07
+
+### Added
+- Address canonicalization module (src/address.rs) for peer and RPC endpoints
+  - canonicalize_peer_addr() — wildcard, localhost, IPv6, and hostname normalization using actual transport IP
+  - canonicalize_rpc_addr() — normalizes RPC host against canonical peer address
+  - is_valid_peer_addr() — validates canonical address form before identity hashing
+- PeerManager::bind_canonical_dial_target() — explicit dial target upgrade path for handshake reconciliation
+- 18 address canonicalization tests (tests/address_tests.rs)
+- 8 peer manager reconciliation tests (tests/peer_manager_tests.rs)
+
+### Changed
+- Inbound peer registration now uses canonicalize_peer_addr() with actual transport IP before hashing
+- Inbound handshake drops connections with malformed canonical addresses — identity is never derived from a non-address string
+- Handshake path calls bind_canonical_dial_target() unconditionally after reconciliation — stale provisional dial targets are upgraded on every handshake
+- Handshake RPC normalization now uses canonicalize_rpc_addr() from address module
+- normalize_peer_address() overwrites inherited dial target on canonical migration
+
+### Notes
+- Inbound peer identity is derived from the canonicalized advertised peer_addr — stable across reconnects
+- Outbound provisional identity remains based on dial target and is reconciled via handshake normalization
+- Gossiped peer address validation deferred to future hardening
+- RPC address validation deferred to future hardening
+- All 77 tests pass (51 existing + 18 address + 8 peer_manager)
+
+## [0.7.2] - 2026-07-03
+
+### Added
+- src/tls.rs — TLS 1.3 transport encryption module
+  - generate_tls_config() — ephemeral self-signed server certificate generated in memory at startup and never persisted
+  - generate_client_tls_config() — client TLS config using FingerprintVerifier
+  - cert_fingerprint() — SHA-256 certificate fingerprint extraction for observability
+  - TLS 1.3 only — no legacy protocol fallback
+  - Local certificate fingerprint logged at startup; peer certificate fingerprints logged on connection
+- rust-toolchain.toml bumped to 1.88.0 — required by the time crate pulled in by rcgen
+
+### Changed
+- network.rs — send_framed_message and read_framed_message are now generic over AsyncRead + AsyncWrite + Unpin
+- network.rs — start_listener wraps accepted TCP streams with TlsAcceptor
+- network.rs — connect_and_handle_peer wraps outbound TCP streams with TlsConnector
+- network.rs — broadcast_message wraps broadcast connections with TlsConnector
+- network.rs — TLS configs are passed in as shared Arc<ServerConfig> and Arc<ClientConfig>
+- main.rs — server and client TLS configs are generated once at startup and shared across network paths
+- lib.rs — tls module registered
+
+### Notes
+- P2P transport now uses TLS 1.3 with ephemeral in-memory self-signed certificates
+- Certificates are used as transport artifacts only and are not part of the peer identity model
+- Peer identity behavior above the transport layer remains unchanged from v0.7.1
+- Certificate fingerprints are logged for observability during connection establishment
+- RPC sync remains plain HTTP — RPC TLS is deferred to later hardening work
+- Certificate trust anchoring and fingerprint pinning are deferred to future network hardening
+- All 51 tests pass
+
+## [0.7.1] - 2026-07-01
+
+### Added
+- src/crypto.rs — peer_addr_hash(addr, genesis_hash) — epoch-salted peer address hashing using 24-hour rotation window derived from genesis hash
+
+### Changed
+- PeerInfo.address renamed to PeerInfo.peer_hash — semantic alignment with identity model
+- generate_peer_id(addr) parameter renamed to generate_peer_id(peer_identifier) — reflects that input is now a hash, not a raw address
+- PeerManager gains dial_targets: HashMap<String, String> — separates peer identity (hash) from transport (raw dial address)
+- PeerManager.add_peer() now takes (peer_hash, dial_addr) — identity and transport stored separately
+- PeerManager.get_connected_peers() returns hashes — identity layer only
+- PeerManager.get_connected_peer_dial_targets() returns Vec<(hash, raw_addr)> — transport layer for broadcast/reconnect
+- PeerManager.get_all_known_peers() returns raw dial addresses — gossip stays dialable
+- PeerManager.get_peers_to_connect() returns raw dial addresses — connect loop dials raw targets
+- PeerManager.cleanup_stale_peers() removes from both peers and dial_targets
+- network.rs start_listener() takes genesis_hash — no longer registers inbound peers from accepted socket endpoint
+- Inbound peers registered only after handshake is read — identity derived from advertised peer_addr, not ephemeral source port
+- Inbound dial target resolved via resolve_dial_addr() — handles 0.0.0.0:port wildcard bind addresses
+- connect_and_handle_peer() takes genesis_hash — outbound peers registered under hash of dial target
+- broadcast_message() dials raw transport targets from get_connected_peer_dial_targets()
+- main.rs handshake processing computes declared_hash = peer_addr_hash(their_addr) and compares hash-to-hash before normalizing
+- normalize_rpc_addr() now called with their_addr instead of peer_addr — uses raw address space not hash space
+
+### Notes
+- Outbound identity is provisional (hash of dial target) until handshake normalization reconciles with inbound declared identity
+- Raw IPs never stored as peer identity, never logged as peer identity, never persisted beyond connection mechanics
+- Zero Footprint: raw transport addresses exist only as long as mechanically necessary for TCP operations
+- Known limitation: resolve_dial_addr() handles 0.0.0.0:port only — hostname and IPv6 normalization deferred
+- Known limitation: wildcard RPC normalization uses advertised address rather than resolved dial target — deferred
+- All 51 tests pass unchanged
+
+## [0.7.0] - 2026-06-27
+
+### Changed
+- validator_id removed from NetworkMessage::Handshake entirely
+- validator_id removed from PeerInfo
+- delegations removed from ChainState and SnapshotPayload
+- Startup quorum gating removed — production readiness now determined by sync completion
+- 120-second validator quorum timeout removed
+- sync_triggered AtomicBool removed
+- Peer connections are now identity-free at the transport layer
+- TPI block production proves validator legitimacy through chain behavior, not handshake declarations
+- Valid Blockchain reframed from PoS to TPI — Three-Party Integrity is the consensus mechanism
+
+### Removed
+- bind_validator() from PeerManager
+- connected_validator_count() from PeerManager
+- SPO (Stake Pool Operator) delegation — dropped from scope entirely
+- validator_id parameter from connect_and_handle_peer() and all call sites
+
+### Notes
+- All 51 tests pass unchanged
+- Solo node behavior unchanged — production enabled immediately
+- Bootstrap nodes remain temporary scaffolding; network sustains through peer gossip once live
+- validator_id still used internally in TPI message flow — consensus layer unaffected
+
+## [0.6.7] - 2026-06-23
+
+### Added
+- src/arweave.rs — Arweave upload module: JWK wallet loading, deep hash signing, Merkle data root, transaction construction, inline upload, tag schema, oversize guard
+- src/publication.rs — backend-neutral archive publication contract: ArchiveArtifact, PublicationManifest, PublicationReceipt, PublicationStatus
+- run_publisher_loop() — background task scanning publish_queue/ every 5 minutes, retrying Failed receipts, skipping Submitted and DeferredChunkingRequired
+- archive_size_estimator — dev tool binary for measuring archive segment sizes at varying tx/block counts
+- arweave_smoke_test — dev tool binary for validating JWK load and RSA key path
+
+### Changed
+- archive_segment_to_disk() now returns ArchiveSegment on success (metadata reused for manifest without extra disk read)
+- maybe_archive_and_prune() now emits a publication manifest after verified local archive write, before prune
+- New dependencies: rsa = "0.9", data-encoding = "2", jsonwebkey = "0.3"
+
+### Notes
+- Arweave inline upload capped at 8 MB by default (configurable via ARWEAVE_INLINE_MAX_BYTES env var)
+- Segments exceeding inline cap receive DeferredChunkingRequired status — chunked upload deferred to future release
+- Merkle data_root implementation follows Arweave spec; correctness requires network validation with a real funded wallet
+- Signing field order verified against official Arweave HTTP API docs
+- PSS with SHA-256 confirmed correct per Arweave docs
+- Arweave wallet loaded from ARWEAVE_JWK_JSON env var; node runs normally if var is absent
+- .cargo/audit.toml added to document inapplicable advisories: RUSTSEC-2023-0071 (rsa Marvin Attack — local signing only, no network timing exposure), RUSTSEC-2026-0097 (rand::rng() — we use thread_rng()), RUSTSEC-2025-0134 (rustls-pemfile unmaintained — transitive via reqwest)
+- Publication is sidecar-only: prune correctness never depends on remote upload success
+
+## [0.6.6] - 2026-06-20
+
+### Fixed
+- Archive/prune generation no longer holds the ChainState write lock during disk I/O
+- Archive file writes, reads, and verification no longer block the Tokio async runtime worker threads
+- Duplicate concurrent archive attempts for the same segment path now prevented
+
+### Added
+- archive_segment_to_disk() — isolated synchronous archive logic for use with spawn_blocking
+- archiving_in_progress: Arc<Mutex<HashSet<String>>> guard preventing duplicate archive tasks
+- tests/archive_tests.rs — 11 new unit tests covering checksum validation, version mismatch, block count mismatch, empty-segment rejection, sort-on-build, and write/read round trips
+- Clearer archive start/success/failure logging
+
+### Changed
+- maybe_archive_and_prune() is now async, taking Arc<RwLock<ChainState>> instead of &mut ChainState
+- Archive work is spawned as an independent tokio task, decoupled from block production and block receipt
+- Disk I/O during archive generation now runs via tokio::task::spawn_blocking
+- Prune range is fixed at archive-trigger time and never re-derived from a changed chain tip
+- Both block-handling call sites (received and produced) updated to drop the chain lock before triggering archive work
+
+### Notes
+- All 51 tests pass (40 existing + 11 new archive tests)
+- Surgical, scope-disciplined refactor. Pruning correctness logic itself was already sound and untouched
+
+## [0.6.5] - 2026-06-19
+
+### Fixed
+- /submit no longer always reports success — uses mempool.add_detailed() and returns real result
+- /balance rejects missing or empty address with 400 instead of silently defaulting to empty string
+- /block rejects missing or invalid slot with 400 instead of silently defaulting to 0
+
+### Added
+- MempoolRejection enum — Duplicate, Full
+- Mempool.add_detailed() — returns Result<(), MempoolRejection> for precise rejection reasons
+- ErrorResponse struct for consistent malformed-request error bodies
+- /submit returns 200 OK, 409 Conflict (duplicate), or 503 Service Unavailable (full mempool)
+
+### Changed
+- Mempool.add() now wraps add_detailed() — same bool interface, no test breakage
+- add_transaction() removed from Mempool — add() is the single insertion path
+- Version bumped to 0.6.5
+
+### Notes
+- All 19 existing tests pass unchanged
+- Surgical, backward-compatible refactor — no breaking API changes for existing callers
+
+## [0.6.4] - 2026-06-09
+
+### Fixed
+- Auth binding gap — from address now verified to derive from from_pubkey in add_block()
+- Wallet nonce hardcoded to 0 — wallet now queries GET /nonce/:address before signing
+
+### Added
+- pubkey_hex_to_address() helper in crypto.rs
+- get_nonce() method on ChainState
+- GET /nonce/:address RPC endpoint
+- fetch_nonce() in wallet.rs with loud failure on RPC error or bad response
+
+### Changed
+- Version bumped to 0.6.4
+
+## [0.6.3] - 2026-06-08
+
+### Added
+- rpc_addr: Option<String> in Handshake NetworkMessage
+- rpc_addr: Option<String> in PeerInfo
+- bind_rpc_addr() in PeerManager
+- get_connected_peer_rpc_addrs() with deduplication in PeerManager
+- normalize_rpc_addr() — replaces 0.0.0.0 with peer transport IP
+- perform_startup_sync() — one-time catch-up task on startup
+- sync_triggered Arc<AtomicBool> — prevents duplicate sync tasks
+- Peer-based live sync via /head and /block/:slot RPC endpoints
+- production_ready now flips only after successful catch-up
+- Partial sync failure exits cleanly rather than allowing stale production
+
+### Changed
+- connect_and_handle_peer signature extended with my_rpc_addr: Option<String>
+- /block and /block/:slot now return Option<Block> directly
+- BlockResponse struct removed from rpc.rs
+- Dashboard log now shows actual configured RPC address
+- Version bumped to 0.6.3
+
+### Notes
+- Sync runs once on startup after quorum is reached
+- Sync failure exits the node — does not allow partial-state production
+- RPC address advertised in handshake, normalized from 0.0.0.0 to peer IP
+
+## [0.6.2] - 2026-06-06
+
+### Added
+- validator_id: Option<String> in Handshake NetworkMessage
+- validator_id: Option<String> in PeerInfo
+- bind_validator() in PeerManager
+- normalize_peer_address() in PeerManager — promotes canonical address, removes transport-only entry
+- connected_validator_count() — counts distinct connected validator IDs against configured set
+- production_ready Arc<AtomicBool> gate — blocks production until validator quorum confirmed
+- Solo node detection — production enabled immediately when bootstrap_nodes is empty
+- 120 second startup timeout — exits cleanly if quorum not reached
+- validator_id passed in all outbound peer connections
+
+### Changed
+- connect_and_handle_peer signature extended with validator_id: Option<String>
+- Version bumped to 0.6.2
+
+### Notes
+- Validator identity in handshake is transitional bootstrap mechanism
+- Suitable for private trusted validator testnets only
+- Public adversarial validator testnets not recommended until v0.7.0
+- Planned replacement in v0.7.0 with ephemeral network identity and validator proof/binding
+
+## [0.6.1] - 2026-06-01
+
+### Added
+- maybe_archive_and_prune() — triggers every 2,160 blocks on both received and produced blocks
+- Archive segment generation wired into main.rs block handling paths
+- Genesis mismatch logging on handshake — peer genesis disagreement now logged, not adopted
+- Genesis hash computed from effective runtime genesis timestamp, not config value
+- Full segment count validation before archive/prune (must have exactly 2,160 blocks)
+- Read-back verification after archive write via load_verified_archive_segment()
+- Previous segment checksum linkage in archive metadata
+
+### Changed
+- Genesis adoption removed — chain identity is now fixed at startup
+- Version bumped to 0.6.1
+
+### Notes
+- Archive segments write to ./archive_{start}_{end}.json
+- Pruning only occurs after successful write and read-back verification
+- Previous segment linkage is optional for now
+- Disk IO during state write lock is acceptable at current block cadence
+
+## [0.6.0-alpha.3] - 2026-05-31
+
+### Added
+- archive.rs — 6-hour archive segment module
+  - ArchiveSegment and ArchiveMetadata structs
+  - Deterministic segment checksum over full block and transaction content
+  - build_archive_segment() — builds segment from a block range
+  - write_archive_segment() — atomic write via temp file and rename
+  - read_archive_segment() — deserialize from disk
+  - verify_archive_segment() — version, checksum, and block count validation
+  - load_verified_archive_segment() — combined read and verify
+  - segment_archive_path() — deterministic file naming by slot range
+  - blocks_per_segment() — 2,160 blocks per 6-hour segment
+
+### Changed
+- Version bumped to 0.6.0-alpha.3
+- lib.rs — added pub mod archive
+
+### Notes
+- Archive segment is the durable chain persistence unit
+- Peers handle live catch-up sync
+- Arweave delivery deferred to later release
+- main.rs integration pending
+
+## [0.6.0-alpha.2] - 2026-05-30
+
+### Changed
+- Removed hardcoded snapshot path constants — path is now caller-supplied
+- snapshot_exists(), write_snapshot(), read_snapshot() now take path parameter
+- Dropped hourly local snapshot cadence as primary architecture direction
+- Persistence direction reframed toward 6-hour archive segments and peer-based live sync
+- Version bumped to 0.6.0-alpha.2
+
+### Kept
+- All reusable snapshot primitives (checksums, metadata, verification, restore helpers)
+- GET /head and GET /block/:slot RPC endpoints
+
+### Notes
+- main.rs remains untouched — no runtime snapshot integration yet
+- v0.6.1 will implement 6-hour archive segment generation and peer sync path
+
+## [0.6.0-alpha] - 2026-05-26
+
+### Added
+- Snapshot system (snapshot.rs)
+  - SnapshotPayload, SnapshotMetadata, RecentBlockRef, Snapshot structs
+  - Deterministic genesis hash computation
+  - Deterministic payload checksum with canonical serialization
+  - Atomic write via temp file and rename
+  - Snapshot verification on load
+  - load_verified_snapshot() safe helper
+  - restore_state() for startup recovery
+  - snapshot_exists() and snapshot_path() helpers
+  - recent_block_tips tracking (last 10 blocks, slot + hash + parent_hash)
+- Recovery RPC endpoints in rpc.rs
+  - GET /head — returns latest_slot and latest_block_hash
+  - GET /block/:slot — returns full block by slot for recovery sync
+- HeadResponse struct in rpc.rs
+
+### Changed
+- Version bumped to 0.6.0-alpha
+- lib.rs — added pub mod snapshot
+
+### Notes
+- main.rs integration pending (v0.6.1)
+- Snapshot writes and startup restore not yet wired into node
+- Node operates identically to v0.5.1 until v0.6.1 lands
+
+## [0.5.1] - 2026-03-06
+
+### Added
+- ChainState validation tests (5 tests)
+  - Duplicate block rejection
+  - Insufficient balance validation
+  - Invalid nonce detection
+  - Balance update correctness
+  - Nonce increment validation
+
+### Changed
+- Test coverage increased to ~57% (46 tests total)
+- Version bumped to 0.5.1
+
+## [0.5.0-final] - 2026-03-05
+
+### Added
+- **Crypto unit tests (8 tests)**
+  - Keypair generation validation
+  - Sign and verify roundtrip
+  - Tampered amount rejection
+  - Tampered nonce rejection
+  - Tampered fee rejection
+  - Wrong public key rejection
+  - Invalid hex signature rejection
+  - Zero signature rejection
+
+### Changed
+- Test coverage increased to ~52% (41 tests total)
+- Version bumped to 0.5.0-final
+
+### Notes
+- All 41 tests passing, 0 failures
+- Crypto module fully covered
+
+## [0.5.0-rc1] - 2026-02-14
+
+### Added
+- **Fee priority ordering in mempool**
+  - Transactions sorted by fee (high → low)
+  - Economic incentive for users to pay higher fees
+  - Validators maximize fee earnings
+- **Fee priority tests (2 tests)**
+  - Fee ordering validation
+  - Same-fee transaction order consistency
+
+### Changed
+- Mempool `get_pending()` now sorts by fee instead of hash
+- Test coverage increased to 42% (33 tests total)
+
+### Notes
+- Frontrunning protection deferred to v0.6.0 (parent hash seed method)
+- Core v0.5.0 features complete (minting + fee priority)
+- Target: 70% test coverage for v0.5.0 final
+
+## [0.5.0-beta1] - 2026-02-12
+
+### Added
+- **Block reward minting implementation**
+  - Validators earn 0.0808 VLid per block (Epoch 0)
+  - Automatic minting on block acceptance
+  - Epoch-based reward calculation using block.slot
+  - Supply cap enforcement (33M VLid hard limit)
+- **Minting test suite (7 tests)**
+  - Block reward validation
+  - Supply cap enforcement testing
+  - Multi-block supply tracking
+  - Epoch transition verification
+  - Different validators earning independently
+  - Minting stops at supply cap
+
+### Fixed
+- Epoch calculation now uses `block.slot` instead of `latest_slot`
+  - Prevents epoch mismatch when blocks arrive out of order
+  - Ensures correct reward calculation for all blocks
+
+### Changed
+- Test coverage increased from 30% to 40% (31 tests total)
+- ChainState now mints rewards in `add_block()`
+
+### Notes
+- Genesis allocation not yet implemented (coming in v0.5.0-rc)
+- Fee priority ordering not yet implemented (coming in v0.5.0-rc)
+- Target: 70% test coverage for v0.5.0 final
+
+## [0.5.0-alpha1] - 2026-02-11
+
+### Added
+- **Tokenomics foundation**
+  - Total supply: 33M VLid (33 quadrillion nano-VLid, 9 decimals)
+  - Epoch structure: 3 epochs × 7 years (60%/30%/10% decay)
+  - Reward calculations: Block (0.0808 VLid), TPI (0.0045 VLid), Racer, Snapshot
+  - Genesis allocation: 33K VLid (0.1% of supply)
+- **Comprehensive test suite (18 tests, 30-35% coverage)**
+  - Mempool tests: duplicate detection, size limits, retrieval (4 tests)
+  - TPI consensus tests: all scenarios (6 tests)
+  - Tokenomics tests: supply validation, decay, percentages (8 tests)
+- **Test infrastructure**
+  - Created `tests/` directory with organized test files
+  - Test helper functions for transaction and TPI message creation
+
+### Fixed
+- Removed duplicate `compute_block_hash()` function (critical consensus bug)
+- Block hash now uses single source of truth from `src/tpi.rs`
+
+### Changed
+- Named constants (`MAX_BLOCK_WAIT_ATTEMPTS`, `BLOCK_POLL_INTERVAL_MS`)
+- Tokenomics uses 9 decimals (nano-VLid) for precision
+
+### Security
+- Fixed consensus vulnerability where duplicate hash function was missing nonce/fee
+- Mempool size limit enforced (10,000 transactions max)
+
+### Documentation
+- Added `docs/genesis_allocations.md` (33K VLid distribution strategy)
+- Updated ROADMAP.md with v0.5.0 testing scope
+
+### Notes
+- **Alpha status:** Tokenomics defined but minting not yet implemented
+- Block reward minting coming in v0.5.0-beta
+- Target: 70% test coverage for v0.5.0 final
+
+## [0.4.8] - 2026-02-07
+
+### Fixed
+- Block hash now includes transaction nonce and fee fields (security fix)
+- Added mempool size limit (10,000 transactions max to prevent memory exhaustion)
+
+### Security
+- Fixed block hash collision vulnerability where blocks with identical transactions but different nonces/fees would hash identically
+
+### Notes
+- Critical security fixes recommended by audit
+- Foundation hardening for v0.5.0 tokenomics
+
+## [0.4.7] - 2026-02-07
+
+### Changed
+- Simplified fee distribution logic (routes all fees to block producer)
+- Updated ROADMAP.md with staggered release timeline (Q2/Q3/Q4 2026)
+
+### Fixed
+- Removed confusing delegation check in fee routing (proper SPO logic deferred to v0.7.0)
+
+### Notes
+- No functional change to fee behavior (delegations HashMap was unused)
+- Clarifies temporary vs final implementation
+
+## [0.4.6] - 2026-02-06
+
+### Changed
+- Added ROADMAP.md to document shipped vs planned features
+- Updated README.md with roadmap summary
+- Added TODO comments to pruning.rs and snapshot.rs placeholders
+
+### Fixed
+- Corrected v0.4.0 release notes (pruning documented prematurely)
+
+### Notes
+- No code changes
+- Clarifies pruning/SPO deferred to v0.6.0/v0.7.0
+- Tokenomics remain v0.5.0 scope
+
+
+## [0.4.5] - 2026-02-04
+
+### Added
+- Transaction nonce field (replay protection)
+- Transaction fee field (validator income)
+- Total supply tracking in ChainState
+- Nonces HashMap for sequential transaction ordering
+- Delegations HashMap (for v0.6 SPO implementation)
+- Epoch calculation method (`current_epoch()`)
+
+### Changed
+- Transaction signatures now cover nonce and fee
+- Transaction validation checks nonces (prevents replay attacks)
+- Balance validation includes fee deduction
+- Fees route to block producer (temporary, SPO delegation in v0.6)
+- RPC `submit_transaction` endpoint now accepts nonce and fee
+- Wallet CLI now includes nonce and fee when sending transactions
+
+### Security
+- **CRITICAL:** Fixed signature verification to include all transaction fields
+- Added nonce enforcement to prevent transaction replay
+- Updated `bytes` dependency to 1.11.1 (fix RUSTSEC-2026-0007)
+
+### Notes
+- Foundation prep for v0.5.0 tokenomics implementation
+- SPO fee delegation deferred to v0.6
+- `rustls-pemfile` warning (unmaintained) is low priority
+
+## [0.4.3] - 2026-01-31
+
+### Added
+- Enhanced TPI logging showing validator selection and consensus status
+- Racer activation logging for better observability
+- Config validation on startup (fail fast on malformed configs)
+- Better error messages for invalid genesis timestamps
+
+### Changed
+- Improved network diagnostics in logs
+
+## [0.4.2] - 2026-01-30
+
+### Added
+- Supply chain security hardening with cargo vendoring
+- CI security audit workflow
+- Pinned Rust toolchain for reproducible builds
+
+### Changed
+- Unified block hash computation across all modules
+- TPI hash messages now use framed protocol
+
+### Security
+- Transaction signature verification restored
+- Removed demo keys from git history
+- Automated security audits on every commit
+
+## [0.4.0-alpha] - 2026-01-07
+
+### Notes
+- Pruning/snapshot implementation deferred to v0.6.0
+- Some features documented prematurely (corrected in v0.4.6)
+
+### Added - TPI Consensus Implementation
+
+#### Core Consensus
+- Three-Person Integrity (TPI) consensus: 3 validators verify each block before broadcast
+- Merit-based broadcaster selection: highest merit validator produces blocks
+- Racer backup system: 5/3/2 timing (5s primary, 3s buffer, 2s racer fallback)
+- Deterministic TPI validator selection using slot-based hashing
+- 2-of-3 and 2-of-2 consensus support with automatic quarantine for outliers
+
+#### Performance & Optimization
+- Memory pruning: keeps 2,160 blocks (one epoch) in RAM
+- Memory usage reduced to 4 MB per validator (down from 16+ MB)
+- Aggressive block cleanup after snapshot creation
+- Uptime improved to 99.99% (TPI + racer combined)
+
+#### Monitoring & Metrics
+- Real-time dashboard with WebSocket connection (`/dashboard`)
+- Live validator metrics (uptime, blocks produced, memory usage)
+- TPI consensus tracking and verification logs
+- Block production timeline visualization
+- System stats monitoring (RAM, CPU)
+
+#### New Modules
+- `src/tpi.rs` - TPI validator selection and consensus verification
+- `src/tpi_production.rs` - Async TPI block production flow
+- `src/racer.rs` - Backup validator selection and speed tracking
+- `src/metrics.rs` - Performance metrics collection and aggregation
+- `testing/index.html` - Real-time WebSocket dashboard
+
+#### Configuration
+- `[consensus.tpi]` - TPI group settings (validators_per_group, allow_two_of_two)
+- `[consensus.timing]` - Block production windows (primary: 5s, buffer: 3s, racer: 2s)
+- `[consensus.racer]` - Racer pool configuration (size: 10, reward multiplier: 5.0)
+- `[rewards]` - Reward structure (block, racer, TPI verification, snapshot upload)
+- Updated `[pruning]` - keep_blocks reduced to 2160 (one epoch)
+
+#### API Extensions
+- WebSocket endpoint at `/ws` for real-time metrics streaming
+- `/dashboard` endpoint for HTML dashboard
+- Enhanced `/state` endpoint with validator information
+
+### Changed
+
+#### Consensus Refactor
+- Replaced single producer selection with TPI group selection
+- Made `validators` HashMap public in `Consensus` struct
+- Validator merit scores now drive broadcaster selection
+- Block production integrated into async TPI flow
+
+#### Network Protocol
+- Added `TpiHash` message type for hash exchange between validators
+- Added `TpiConsensusAchieved` message for consensus broadcast
+- Enhanced peer coordination for TPI verification
+
+#### Block Production
+- Blocks now verified by 3 validators before network broadcast
+- Merit-based selection ensures best performers produce blocks
+- Racer fallback activates only after 8-second timeout
+- Consistent 10-second block intervals maintained globally
+
+### Security
+
+#### Improved
+- Byzantine fault tolerance: 1-of-3 malicious validators tolerated
+- Fork prevention: 99.999% success rate
+- Automatic quarantine for validators with mismatched hashes
+- Network partition resilience via racer backup system
+
+### Testing
+
+#### Verified
+- Single validator: ✅ Blocks producing consistently at 10s intervals
+- Multi-validdator: ✅ (3+ nodes), same as single validator
+- TPI consensus: ✅ Hash computation and broadcaster selection working
+- Memory usage: ✅ 17-33 MB stable over extended runtime
+- Dashboard: ✅ WebSocket metrics updating in real-time
+
+#### Pending
+- Network partition scenarios: Phase 3 testing
+- Snapshot TPI verification: Phase 3 implementation
+
+### Performance
+
+- Block time: 10 seconds (consistent globally)
+- Memory: 17-33 MB per validator under full load(50-100 tx per block)
+- Bandwidth: 3-5 GB/month (unchanged)
+- Uptime: 99.99% (TPI + racer combined)
+- Fork risk: 0.00003% in theory
+
+### Hardware Requirements
+
+#### Minimum (Developing regions)
+- RAM: 2 GB
+- Disk: 500 MB
+- Internet: 10 Mbps down / 5 Mbps up
+- Bandwidth: 10 GB/month cap (uses 2.6-3.7 GB)
+
+#### Recommended (Raspberry Pi or laptop)
+- RAM: 4 GB
+- Disk: 1 GB
+- Internet: 50 Mbps down / 10 Mbps up
+- Bandwidth: No concern (<4 GB/month)
+
+## [0.3.0] - 2025-12-11
+
+### Added
+- Privacy-preserving logging with peer IDs
+- Randomized peer selection for network security
+- Randomized transaction ordering (frontrunning protection)
+- Enhanced security foundations
+
+### Changed
+- Improved peer discovery protocol
+- Enhanced logging with timestamps
+
+### Security
+- Randomized network topology prevents isolation attacks
+- Fair transaction ordering eliminates MEV opportunities
+
+## v0.2.0 (Unreleased)
+
+Development iteration between v0.1.0 and v0.3.0 - not formally tagged on GitHub.
+
+## [0.1.0] - 2025-10-01
+
+### Added
+- Initial blockchain structure
+- Genesis block configuration
+- Basic account system
+- TOML configuration support
+
+---
+
