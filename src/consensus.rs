@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const FINALITY_THRESHOLD: f64 = 0.66;
-
 pub struct Consensus {
     pub validators: HashMap<String, u64>,
     total_stake: u64,
