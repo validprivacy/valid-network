@@ -697,24 +697,18 @@ On startup, a node queries configured peers for the current chain head and fetch
 
 ### 9.1 VLid Supply Model
 
-VLid (pronounced "valid") is the native token of Valid Blockchain. The supply model is designed around one principle: tokens mint only when validated work is proven.
+VLid (pronounced "valid") is the native token of Valid Blockchain. The supply model is built on a fixed cap, with issuance outside the genesis allocations tied to validated work.
 
 - **Total cap:** 33 million VLid
 - **Decimal places:** 9 (1 VLid = 1,000,000,000 nanoVLid)
-- **Emission timeline:** 21 years across 3 epochs of 7 years each
-- **Minting trigger:** Block production only
+- **Genesis allocations:** set at genesis, each with a cliff and a vesting schedule
+- **Minting trigger:** block production, for all supply outside the genesis allocations
 
-There is no pre-mine, VC allocations, foundation treasury, and no team reserve. That would put the blockchain's **users** in debt before the blockchain even launches. The genesis bootstrap allocation exists solely to seed the initial validator set and is the **only** non-block-production source of initial supply.
+Genesis allocations may include partners, contributors, testnet participants, and the Valid Foundation. All remaining supply is minted only as block rewards, when a validator produces a block.
 
 ### 9.2 Emission Schedule
 
-| Epoch | Years | Fraction of Total Supply |
-|-------|-------|--------------------------|
-| 0     | 0-7   | 60%                      |
-| 1     | 7-14  | 30%                      |
-| 2     | 14-21 | 10%                      |
-
-Within each epoch, block rewards are fixed and emitted per block produced. The Epoch 0 block reward is 0.0808 VLid per block. Rewards decay at epoch boundaries, not continuously, providing predictable emission curves.
+Block rewards are fixed within each period of the schedule and emitted per block produced. Rewards step down at period boundaries, not continuously, providing a predictable emission curve. The schedule, including the length of each period and the reward per block, runs with working values on testnet and will be finalized before mainnet.
 
 ### 9.3 Block Rewards and Fees
 
@@ -735,13 +729,13 @@ When the cap is reached, validator compensation transitions entirely to transact
 
 ### 9.4 Genesis and Validator Reward Allocations
 
-The genesis allocation and specific validator reward parameters are subject to adjustment in v0.9.x as the validator set size and network characteristics become known through testnet operation. The distribution principles are as follows: merit-based, no pre-mine, no team reserve, and are fixed. The specific numerical parameters will be finalized before mainnet launch based on testnet data.
+The sizes of the genesis allocations, their cliffs and vesting schedules, and the validator reward parameters are to be determined. They will be finalized before mainnet launch, informed by the validator set size and network characteristics observed during testnet.
 
 ### 9.5 Governance
 
 Governance of Valid Blockchain is merit-based. Voting weight is determined by validator merit score and wallet age, not token balance. This prevents token-weighted governance from concentrating decision-making power among large holders.
 
-Ecosystem grants are being proposed as a formal governance mechanism. Grants would be denominated in VLid and allocated from transaction and on-chain fees, funding development work that strengthens the Valid ecosystem. Approved grants would be distributed on a milestone basis, with payment contingent on verified delivery. This model avoids the speculation and misalignment of traditional VC funding while providing sustainable support for ecosystem development.
+Ecosystem grants are being proposed as a formal governance mechanism. Grants would be denominated in VLid and allocated from transaction and on-chain fees, funding development work that strengthens the Valid ecosystem. Approved grants would be distributed on a milestone basis, with payment contingent on verified delivery. This model provides sustainable support for ecosystem development, with payment tied to verified delivery.
 
 ---
 
@@ -812,7 +806,7 @@ The testnet is expected to run for approximately six months. Six months provides
 
 Testnet participation is rewarded through two mechanisms.
 
-**Genesis allocation distribution.** The genesis bootstrap allocation of VLid will be distributed to testnet participants based on their leaderboard performance at the conclusion of the testnet period. Leaderboard standing is tracked by the Observer Bot in the Discord server, which records attendance, participation, bug finds, bug fixes, notable contributions, social media posts, articles, videos, and test completions. Points are awarded manually by myself, Rook, on verified activity. The Observer Bot is testnet scaffolding. It will be retired after mainnet launch.
+**Genesis allocation distribution.** Testnet participants will receive a share of the genesis allocations based on their leaderboard performance at the conclusion of the testnet period. Leaderboard standing is tracked by the Observer Bot in the Discord server, which records attendance, participation, bug finds, bug fixes, notable contributions, social media posts, articles, videos, and test completions. Points are awarded manually by myself, Rook, on verified activity. The Observer Bot is testnet scaffolding. It will be retired after mainnet launch.
 
 **Bootstrap merit.** The behavioral merit accumulated during testnet carries forward to mainnet as each validator's starting standing. This is not a small reward. A validator who has participated consistently for six months arrives at mainnet with a verified behavioral history that gives them genuine selection priority over any fresh node that connects at mainnet launch. This bootstrap merit is why testnet participation is valuable beyond any token reward. It is the foundation of each validator's mainnet standing.
 
@@ -872,7 +866,7 @@ Ecosystem grants are being proposed as a formal governance mechanism within the 
 
 Developers or teams propose a project that would benefit the Valid ecosystem. The proposal includes a technical specification, a milestone plan, and a requested grant amount denominated in VLid. The validator community votes on the proposal using merit-weighted voting. Approved proposals receive milestone-based disbursements. Payment is contingent on verified delivery of each milestone, not on submission of the proposal.
 
-This model is designed to fund the kind of work that makes the ecosystem stronger without creating the misalignment of traditional VC funding. A VC-funded project has obligations to its investors. A grant-funded project has obligations to the community that funded it. The incentives are aligned differently, and the resulting software is typically more aligned with community needs.
+This model is designed to fund the kind of work that makes the ecosystem stronger, with every disbursement tied to verified delivery of a milestone.
 
 ### 12.3 Protocol Parameter Governance
 

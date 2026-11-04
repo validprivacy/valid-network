@@ -39,12 +39,11 @@ TPI is an original consensus mechanism. It is not a variant of Proof of Stake, P
 
 ## Token Economics (VLid)
 
-- Hard cap: 33 million VLid over exactly 21 years (3 epochs of 7 years each)
-- Tokens mint only when validated work is proven (when a block is produced)
-- No VC allocations, no traditional treasury. Completely non-custodial.
-- Epoch 0 block reward: 0.0808 VLid
-- Fees: 100% to block producer (temporary, will go to maintenance, legal, and ecosystem grants decided by community governance)
-- Genesis bootstrap: 33,000 VLid (0.1%)
+- Maximum supply: 33 million VLid, enforced in code
+- Genesis allocations, such as for partners, contributors, testnet participants, and the Valid Foundation, each with cliffs and vesting
+- All supply outside the genesis allocations is minted as validator rewards, only when a block is produced
+- Allocation sizes, vesting schedules, the emission schedule, and fee distribution are to be determined and will be finalized before mainnet
+- Fees: to the block producer on testnet, with the final distribution set before mainnet
 
 Future governance will be merit-based (participation + wallet age).
 

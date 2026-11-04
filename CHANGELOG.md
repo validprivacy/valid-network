@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Rust package and node binary are now named valid-network, and library imports use valid_network. Archive segments published to Arweave carry the App-Name tag valid-network.
 - The whitepaper and litepaper are published at validprivacy.github.io, and the private network product is described as private deployments.
 - Cargo.lock matches the 0.8.0 package version.
+- Token economics docs describe genesis allocations, vesting, and reward parameters as to be finalized before mainnet.
 
 ## [0.8.0] - 2026-08-24
 

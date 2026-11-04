@@ -207,9 +207,9 @@ Features are documented **after** implementation to prevent roadmap drift.
 - ✅ Test coverage increased to 51 tests total
 
 ### v0.5.0-final - Tokenomics & Testing (Mar 2026)
-- ✅ Block reward minting (0.0808 VLid/block, Epoch 0)
+- ✅ Block reward minting (testnet parameters)
 - ✅ Supply cap enforcement (33M VLid hard limit)
-- ✅ Epoch-based reward decay (60%/30%/10% over 21 years)
+- ✅ Epoch-based reward decay
 - ✅ Fee priority ordering (high-fee transactions first)
 - ✅ Fees 100% to block producer
 - ✅ Transaction nonce enforcement (replay protection)

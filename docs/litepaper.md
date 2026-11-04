@@ -91,19 +91,15 @@ The hardware requirements for running a Valid Blockchain node do not grow with t
 
 ## The VLid Token
 
-VLid is the native token of Valid Blockchain. Understanding how it works starts with understanding what it is not.
-
-There is no pre-mine. No tokens were created before the network launched and handed to the team, investors, or advisors. There is no venture capital allocation. No portion of the supply was sold privately to funds or early backers who now hold a financial advantage over everyone else. There is no team reserve. The person who built this (me) earn the same way everyone else does, by running validator nodes and producing blocks.
-
-Every VLid that will ever exist is created by the network itself, one block at a time, as payment to the validator who produced that block. Tokens enter circulation only as a record of real work done. That is the entire issuance model.
+VLid is the native token of Valid Blockchain.
 
 The total supply is capped at 33 million VLid. It will never exceed that number. The cap is enforced in code, not by policy.
 
-**How the emission schedule works**
+**How VLid is issued**
 
-The 33 million VLid is released over 21 years, divided into three periods of seven years each. The first period releases 60 percent of the total supply. The second period releases 30 percent. The third period releases the remaining 10 percent. Block rewards decay at the period boundaries, not gradually over time, which gives validators a clear and predictable schedule to plan around.
+Part of the supply is set aside at genesis for allocations, such as partners, contributors, testnet participants, and the Valid Foundation, each with a cliff and a vesting schedule. Everything outside those allocations is created by the network itself, one block at a time, as payment to the validator who produced that block.
 
-In the first epoch, the block reward is 0.0808 VLid per block. At one block every 10 seconds, that is roughly 504 blocks per hour and about 4.4 million blocks over seven years. The math works out so that 60 percent of the cap is distributed over that window at the fixed reward rate. When the first epoch ends, the reward rate drops to reflect the lower allocation for the second epoch, and so on.
+Block rewards follow an emission schedule that steps down at set boundaries, which gives validators a clear and predictable schedule to plan around.
 
 Once the 33 million cap is reached, block rewards stop and validators earn entirely from transaction fees. This mirrors the long-term model of Bitcoin, where fee revenue is expected to sustain the network after the fixed supply is exhausted.
 
@@ -119,9 +115,9 @@ There is no minimum VLid balance required to become a validator. There is no loc
 
 Governance of Valid Blockchain is merit-based. Voting weight comes from a combination of validator merit score and wallet age, not from how many tokens you hold. A validator who has been participating honestly for two years has more governance influence than a wallet that recently acquired a large token balance without any participation history. This is a deliberate choice to prevent the accumulation of governance power by wealthy token holders, which is the failure mode of every token-weighted governance system.
 
-Ecosystem grants are being proposed as a formal governance mechanism. Developers and teams will be able to propose projects that benefit the Valid ecosystem, have the community vote on them using merit-weighted votes, and receive payment in VLid on a milestone basis rather than upfront. This is meant to fund the kind of work that makes the ecosystem stronger without any of the misalignment that comes from investor funding, where the funder's interests and the community's interests often diverge.
+Ecosystem grants are being proposed as a formal governance mechanism. Developers and teams will be able to propose projects that benefit the Valid ecosystem, have the community vote on them using merit-weighted votes, and receive payment in VLid on a milestone basis rather than upfront. This is meant to fund the kind of work that makes the ecosystem stronger, with payment tied to delivered results.
 
-The specific distribution parameters for the genesis allocation and validator rewards will be finalized in v0.9.x based on what is learned during testnet. The principles are fixed. The exact numbers are not yet final.
+The sizes of the genesis allocations, their vesting schedules, the emission schedule, and fee distribution are to be determined. The testnet runs with working values, and the final parameters will be set before mainnet based on what is learned during testnet.
 
 ---
 
@@ -133,7 +129,7 @@ The first is finding and fixing bugs under real conditions. Real participants, r
 
 The second is bootstrapping the initial validator merit set. A validator who participates consistently through the full testnet period arrives at mainnet with six months of verified behavioral history. That history is their standing in the network from day one. It is why early testnet participation is valuable beyond any token reward.
 
-Testnet participants are rewarded from the genesis allocation based on their leaderboard standing. The leaderboard tracks attendance at live sessions, participation, bug reports, bug fixes, articles, social media posts, videos, and test completions. Points are awarded manually by the project team based on verified activity.
+Testnet participants are rewarded from the genesis allocations based on their leaderboard standing. The leaderboard tracks attendance at live sessions, participation, bug reports, bug fixes, articles, social media posts, videos, and test completions. Points are awarded manually by the project team based on verified activity.
 
 ---
 

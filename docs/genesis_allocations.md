@@ -1,32 +1,31 @@
-# Genesis Allocation Strategy
+# Genesis Allocations
 
-**Total Genesis:** 33,000 VLid (0.1% of 33M supply)
-
----
-
-## Purpose
-
-Reward testnet validators and early community contributors.
+**Status:** to be determined, finalized before mainnet
 
 ---
 
-## Distribution Method
+## Overview
 
-Manual allocation based on:
-- Testnet validator participation
-- Community contributions
-- Bug reports and technical contributions
+VLid has a maximum supply of 33 million, enforced in code. Part of that supply is allocated at genesis, and the rest is minted as validator rewards when blocks are produced.
 
 ---
 
-## Notes
+## Genesis Allocations
 
-- One-time genesis allocation
-- All future rewards minted through block production
-- No investor allocations
-- No need for vesting
-- No team allocation (creator earns through rewards/funding like everyone else)
+Genesis allocations may include:
+- Partners
+- Contributors and the team
+- Testnet validators and community contributors, based on testnet participation, community contributions, bug reports, and technical contributions
+- The Valid Foundation, once it is formed
+
+Each allocation is subject to a cliff and a vesting schedule. Allocation sizes and schedules have not been set.
 
 ---
 
-**Last Updated:** February 9, 2026
+## Validator Rewards
+
+All supply outside the genesis allocations is minted as block rewards, only when a validator produces a block. The emission schedule runs with working values on testnet and will be finalized before mainnet.
+
+---
+
+**Last Updated:** November 4, 2026
