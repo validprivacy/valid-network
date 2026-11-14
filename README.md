@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/network-globe.webp" width="340" alt="Valid Network globe"></p>
+<p align="center"><img src="docs/network-globe.webp" width="480" alt="Valid Network globe"></p>
 
 # Valid Blockchain
 
