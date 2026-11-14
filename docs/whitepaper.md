@@ -1,12 +1,14 @@
+<p align="center"><img src="network-globe.webp" width="200" alt="Valid Network globe"></p>
+
 # Valid Blockchain: A Merit-Based, Zero Footprint Layer 1 with Three-Party Integrity Consensus
 
-**Author:** Michael J Carter
-**White Paper Version:** 1.0
-**Status:** Pre-release beta v0.8.0
-**Date:** August 26th, 2026
-**Website:** https://validprivacy.github.io/network.html
-**Repository:** https://github.com/validprivacy/valid-network
-**Discord:** https://discord.gg/2SP383cJs9
+**Author:** Michael J Carter  
+**White Paper Version:** 1.0  
+**Status:** Pre-release beta v0.8.0  
+**Date:** August 26th, 2026  
+**Website:** https://validprivacy.github.io/network.html  
+**Repository:** https://github.com/validprivacy/valid-network  
+**Discord:** https://discord.gg/XSgqs4uuBa
 
 ---
 
@@ -806,7 +808,7 @@ The testnet is expected to run for approximately six months. Six months provides
 
 Testnet participation is rewarded through two mechanisms.
 
-**Genesis allocation distribution.** Testnet participants will receive a share of the genesis allocations based on their leaderboard performance at the conclusion of the testnet period. Leaderboard standing is tracked by the Observer Bot in the Discord server, which records attendance, participation, bug finds, bug fixes, notable contributions, social media posts, articles, videos, and test completions. Points are awarded manually by myself, Rook, on verified activity. The Observer Bot is testnet scaffolding. It will be retired after mainnet launch.
+**Genesis allocation distribution.** Testnet participants will receive a share of the genesis allocations based on their leaderboard performance at the conclusion of the testnet period. Leaderboard standing is tracked by the Observer Bot in the Discord server, which records attendance, participation, bug finds, bug fixes, notable contributions, social media posts, articles, videos, and test completions. Points are awarded manually by the Valid team on verified activity. The Observer Bot is testnet scaffolding. It will be retired after mainnet launch.
 
 **Bootstrap merit.** The behavioral merit accumulated during testnet carries forward to mainnet as each validator's starting standing. This is not a small reward. A validator who has participated consistently for six months arrives at mainnet with a verified behavioral history that gives them genuine selection priority over any fresh node that connects at mainnet launch. This bootstrap merit is why testnet participation is valuable beyond any token reward. It is the foundation of each validator's mainnet standing.
 
