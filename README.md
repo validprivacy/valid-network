@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/network-globe.webp" width="200" alt="Valid Network globe"></p>
+
 # Valid Blockchain
 
 The Valid Network node, from Valid Privacy.

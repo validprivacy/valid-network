@@ -1,5 +1,3 @@
-<p align="center"><img src="network-globe.webp" width="200" alt="Valid Network globe"></p>
-
 # Valid Blockchain: A Merit-Based, Zero Footprint Layer 1 with Three-Party Integrity Consensus
 
 **Author:** Michael J Carter  
